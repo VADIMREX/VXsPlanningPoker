@@ -1,0 +1,71 @@
+﻿@page "/deck/{mode}/{name?}"
+
+@using VX.PlanningPoker.Data;
+
+<h1>Настройки колоды</h1>
+
+<table>
+    <tr>
+        <td>Наименование колоды:</td>
+        <td><input name="room-name" @bind-value="deck.Name" /></td>
+    </tr>
+    <tr>
+        <td rowspan="@deck.Cards.Count">Карты <button @onclick="()=>AddCard()">+</button></td>
+        <td>@if (deck.Cards.Count > 0) {
+            <input type="text" @bind-value="deck.Cards[0]" /><button @onclick="()=>RemoveCard(0)">-</button>
+        }</td>
+    </tr>
+    @for (var i = 1; i < deck.Cards.Count; i++)
+    {
+        var cardNo = i;
+        <tr>
+            <td><input type="text" @bind-value="deck.Cards[cardNo]" /><button @onclick="()=>RemoveCard(cardNo)">-</button></td>
+        </tr>
+    }
+    <tr>
+        <td colspan="2">
+            <button @onclick="()=>Save()">Сохранить</button><br/>
+            <span>@saveMessage</span>
+        </td>
+    </tr>
+</table>
+
+@code {
+    [Parameter]
+    public string mode { get; set; }
+
+    [Parameter]
+    public string name { get; set; }
+
+    public Deck deck = new Deck();
+
+    public string saveMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        switch (mode)
+        {
+            case "add":
+                deck = new Deck();
+                break;
+            case "edit":
+                deck = Deck.Get(name);
+                break;
+        }
+    }
+
+    public void AddCard() => deck.Cards.Add("");
+
+    public void RemoveCard(int cardNo) => deck.Cards.RemoveAt(cardNo);
+
+    public void Save()
+    {
+        if ("add" == mode && Deck.IsDeckExists(deck.Name)) {
+            saveMessage = $"Колода с именем {deck.Name} уже существует";
+            return;
+        }
+        name = deck.Name;
+        Deck.AddDeck(deck);
+    }
+
+}

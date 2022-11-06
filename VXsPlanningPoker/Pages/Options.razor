@@ -1,0 +1,42 @@
+﻿@page "/options"
+
+@using VX.PlanningPoker.Data;
+
+<h1>Настройки</h1>
+
+<button @onclick="Save">Сохранить</button> <button @onclick="Reload">Перезагрузить</button>
+<table>
+    <tr>
+        <td><h2>Комнаты</h2></td><td><h2>Колоды</h2></td>
+    </tr>
+    <tr>
+        <td>
+            <ul>
+            @foreach(var r in Room.Rooms)
+            {
+                <li><NavLink class="nav-link" href=@($"room/edit/{r.Name}") Match="NavLinkMatch.All">@r.Name</NavLink></li>
+            }
+            </ul>
+        </td>
+        <td>
+            <ul>
+            @foreach(var d in Deck.Decks)
+            {
+                <li><NavLink class="nav-link" href=@($"deck/edit/{d.Name}") Match="NavLinkMatch.All">@d.Name</NavLink></li>
+            }
+            </ul>
+        </td>
+    </tr>
+</table>
+
+@code {
+    public void Save()
+    {
+        Config.Save();
+    }
+
+    public void Reload()
+    {
+        Config.Reload();
+    }
+}

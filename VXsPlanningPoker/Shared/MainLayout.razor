@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>VXsPlanningPoker</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu>
+            <NavMenuElement Title="Домой" />
+            <NavMenuElement Title="Создать комнату" Href="room/new" Picture="oi-plus" />
+            <NavMenuElement Title="Создать колоду" Href="deck/new" Picture="oi-plus" />
+            <NavMenuElement Title="Настройки игрока" Href="player/current" Picture="oi-list-rich" />
+            <NavMenuElement Title="Настройки" Href="options" Picture="oi-list-rich" />
+        </NavMenu>
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

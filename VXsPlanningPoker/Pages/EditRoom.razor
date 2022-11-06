@@ -1,0 +1,68 @@
+﻿@page "/room/{mode}/{name?}"
+
+@using VX.PlanningPoker.Data;
+
+<h1>Настройки комнаты</h1>
+
+<table>
+    <tr>
+        <td>Наименование комнаты:</td><td><input name="room-name" @bind-value="room.Name" /></td>
+    </tr>
+    <tr>
+        <td>Колода:</td>
+        <td><input type="text" value="@deck" @onchange="e=>deckChanged((string)e.Value)" list="decks" />
+            <datalist id="decks">
+                @foreach(var deck in Deck.Decks)
+                {
+                    <option value="@deck.Name" />
+                }
+            </datalist>
+        </td>
+    </tr>
+</table>
+<button @onclick="Save">Сохранить</button><br />
+<span>@saveMessage</span>
+
+@code {
+    [Parameter]
+    public string mode { get; set; }
+
+    [Parameter]
+    public string name { get; set; }
+
+    public string deck { get; set; }
+
+    public Room room { get; set; } = new Room();
+
+    public string saveMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        switch(mode) {
+            case "add":
+                room = new Room();
+                break;
+            case "edit":
+                room = Room.Get(name);
+                break;
+        }
+        deck = room.Deck?.Name ?? "";
+    }
+
+    public void deckChanged(string deck)
+    {
+        if (String.IsNullOrEmpty(deck)) return;
+        room.Deck = Deck.Get(deck);
+        this.deck = room.Name;
+    }
+
+    public void Save()
+    {
+        if ("add" == mode && Room.IsRoomExists(room.Name)) {
+            saveMessage = $"Комната с именем {room.Name} уже существует";
+            return;
+        }
+        name = room.Name;
+        Room.AddRoom(room);
+    }
+}

@@ -1,0 +1,48 @@
+﻿@page "/player/{mode}/{id?}"
+
+@inject IJSRuntime JS
+
+@using VX.PlanningPoker.Data
+
+<h1>Настройки игрока</h1>
+
+<table>
+    <tr><td>Id</td><td>@player.Id</td></tr>
+    <tr><td>Ник</td><td><input value="@player.Name" @onchange="e=>nameChanged((string)e.Value)" /></td></tr>
+</table>
+
+@code {
+    [Parameter]
+    public string mode { get; set; }
+    [Parameter]
+    public Guid id { get; set; }
+
+    public Player player = new Player();
+
+    protected override async Task OnInitializedAsync()
+    {
+        switch (mode)
+        {
+            case "edit":
+                player = Player.Get(id);
+                break;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        switch (mode)
+        {
+            case "current":
+                player = await Player.InitPlayer(JS);
+                this.StateHasChanged();
+                break;
+        }
+    }
+
+    public async Task nameChanged(string name)
+    {
+        player.Name = name;
+        if ("current" == mode) await Player.Save(JS, player);
+    }
+}

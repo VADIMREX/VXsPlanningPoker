@@ -1,0 +1,23 @@
+﻿@page "/"
+@inject IJSRuntime JS
+
+@using VX.PlanningPoker.Data;
+
+<PageTitle>Index</PageTitle>
+
+<h1>Доступные комнаты:</h1>
+
+<ul>
+@foreach(var r in Room.Rooms)
+{
+    <li><NavLink class="nav-link" href=@($"room/play/{r.Name}") Match="NavLinkMatch.All">@r.Name</NavLink></li>
+}
+</ul>
+
+@code {
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        await Player.InitPlayer(JS);
+    }
+
+}

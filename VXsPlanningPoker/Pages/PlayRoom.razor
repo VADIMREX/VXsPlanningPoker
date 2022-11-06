@@ -1,0 +1,208 @@
+﻿@page "/room/play/{RoomName}"
+
+@inject IJSRuntime JS
+
+@using VX.PlanningPoker.Data;
+
+<style>
+    .card-not-picked {
+        padding: 1em;
+    }
+    .card {
+        padding: 1em;
+    }
+    .picked {
+        padding: 1em;
+    }
+</style>
+
+@if (null == player)
+{
+    <span>...Загрузка</span>
+}
+else if (!room.Players.ContainsKey(player.Id))
+{
+    <button @onclick="Join">Присоединиться</button>
+}
+else
+{
+    <button @onclick="Leave">Отключиться</button><br />
+
+    @switch(room.PlayState)
+    {
+        case PlayState.PickCard:
+            <table>
+            @foreach(var p in room.Players)
+            {
+                <tr>
+                    <td> @p.Value.Player.Name</td>
+                    <td>
+                        @if (p.Key == player.Id) {
+                            @if (null == p.Value.pickedCard) {
+                                <div class="card-not-picked"></div>
+                            }
+                            else
+                            {
+                                <div class="card">@p.Value.pickedCard</div>
+                            }
+                        }
+                        else{
+                            @if (null == p.Value.pickedCard) {
+                                <div class="card">🔶🔶<br/>🔶🔶<br/>🔶🔶</div>
+                            }
+                            else
+                            {
+                                <div class="card">🔷🔷<br/>🔷🔷<br/>🔷🔷</div>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+            </table>
+            <table><tr>
+            @foreach(var c in room.Deck.Cards)
+            {
+                var card = c;
+                <td class="@(card == pickedCard ? "picked" : "")">
+                    <button @onclick="()=>PickCard(card)"><br/>@c<br />&nbsp;</button>
+                </td>
+            }
+            </tr></table>
+            <button @onclick="ShowCards">Показать карты</button>
+            break;
+        case PlayState.Timer:
+            <h2>@timerText</h2>
+            break;
+        case PlayState.Show:
+            <table>
+            @foreach(var p in room.Players)
+            {
+                <tr>
+                    <td>@p.Value.Player.Name</td>
+                    <td>
+                        @if (null == p.Value.pickedCard)
+                        {
+                            <div class="card-not-picked"></div>
+                        }
+                        else {
+                            <div class="card">@p.Value.pickedCard</div>
+                        }
+                    </td>
+                </tr>
+            }
+            </table>
+            <button @onclick="NewRound">Новый раунд</button>
+            break;
+    } 
+}
+
+@code {
+
+    [Parameter]
+    public string? RoomName { get; set; }
+
+    public Room room;
+
+    public Player player;
+
+    public string? pickedCard;
+
+    public string timerText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        room = Room.Get(RoomName);
+
+        room.OnNewRound += onNewRound;
+        room.OnTimer += onTimer;
+        room.OnShow += onShow;
+
+        room.OnPlayerJoined += onPlayerJoined;
+        room.OnPlayerLeaved += onPlayerLeaved;
+
+        room.OnCardPicked += onCardPicked;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        player = await Player.InitPlayer(JS);
+        this.StateHasChanged();
+    }
+
+    public void Join()
+    {
+        room.Join(player);
+    }
+
+    public void Leave()
+    {
+        room.Leave(player);
+    }
+
+    public void PickCard(string card)
+    {
+        if (pickedCard == card) card = null;
+        room.PickCard(player, card);
+    }
+
+    public void ShowCards()
+    {
+        room.Timer();
+    }
+
+    public void NewRound()
+    {
+        room.NewRound();
+    }
+
+
+
+    void onNewRound()
+    {
+        this.InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    void onTimer(string text)
+    {
+        this.InvokeAsync(() =>
+        {
+            timerText = text;
+            this.StateHasChanged();
+        });
+    }
+
+    void onShow()
+    {
+        this.InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    void onPlayerJoined(Player p)
+    {
+        this.InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    void onPlayerLeaved(Player p)
+    {
+        this.InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    void onCardPicked(Player p, string c)
+    {
+        this.InvokeAsync(() =>
+        {
+            pickedCard = c;
+            this.StateHasChanged();
+        });
+    }
+}
