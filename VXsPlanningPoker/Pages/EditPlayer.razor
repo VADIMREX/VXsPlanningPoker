@@ -12,8 +12,17 @@
 </table>
 
 @code {
+    /// <summary>
+    /// Режим открытия страницы: <br/>
+    /// - edit - редактирование существующего <br/>
+    /// - current - редактирование текущего
+    /// </summary>
     [Parameter]
     public string mode { get; set; }
+
+    /// <summary>
+    /// ID игорка, для режима редактирования существующего игрока
+    /// </summary>
     [Parameter]
     public Guid id { get; set; }
 

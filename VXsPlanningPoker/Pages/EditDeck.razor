@@ -10,30 +10,46 @@
         <td><input name="room-name" @bind-value="deck.Name" /></td>
     </tr>
     <tr>
-        <td rowspan="@deck.Cards.Count">Карты <button @onclick="()=>AddCard()">+</button></td>
-        <td>@if (deck.Cards.Count > 0) {
-            <input type="text" @bind-value="deck.Cards[0]" /><button @onclick="()=>RemoveCard(0)">-</button>
-        }</td>
+        <th rowspan="@(deck.Cards.Count+1)">Карты <button @onclick="()=>AddCard()">+</button></th>
+        <th>Отображение</th>
+        <th>Число</th>
+        <th></th>
     </tr>
-    @for (var i = 1; i < deck.Cards.Count; i++)
+    @for (var i = 0; i < deck.Cards.Count; i++)
     {
         var cardNo = i;
         <tr>
-            <td><input type="text" @bind-value="deck.Cards[cardNo]" /><button @onclick="()=>RemoveCard(cardNo)">-</button></td>
+            <td>
+                <input type="text" @bind-value="deck.Cards[cardNo].Title" />
+            </td>
+            <td>
+                <input type="number" @bind-value="deck.Cards[cardNo].Value" />
+            </td>
+            <td>
+                <button @onclick="()=>RemoveCard(cardNo)">-</button>
+            </td>
         </tr>
     }
     <tr>
         <td colspan="2">
-            <button @onclick="()=>Save()">Сохранить</button><br/>
+            <button @onclick="()=>Save()">Сохранить</button><br />
             <span>@saveMessage</span>
         </td>
     </tr>
 </table>
 
 @code {
+    /// <summary>
+    /// Режим открытия страницы: <br/>
+    ///  - add - добавление новой колоды <br/>
+    ///  - edit - редактирование существующей колоды
+    /// </summary>
     [Parameter]
     public string mode { get; set; }
 
+    /// <summary>
+    /// Наименование колоды, для режима редактирования
+    /// </summary>
     [Parameter]
     public string name { get; set; }
 
@@ -54,18 +70,22 @@
         }
     }
 
-    public void AddCard() => deck.Cards.Add("");
+    /// <summary>Добавить новую карту</summary>
+    public void AddCard() => deck.Cards.Add(new Card { Title = "" });
 
+    /// <summary>Удалить карту</summary>
+    /// <param name="cardNo">порядковый номер карты</param>
     public void RemoveCard(int cardNo) => deck.Cards.RemoveAt(cardNo);
 
+    /// <summary>Сохранить колоду</summary>
     public void Save()
     {
-        if ("add" == mode && Deck.IsDeckExists(deck.Name)) {
+        if ("add" == mode && Deck.IsDeckExists(deck.Name))
+        {
             saveMessage = $"Колода с именем {deck.Name} уже существует";
             return;
         }
         name = deck.Name;
         Deck.AddDeck(deck);
     }
-
 }

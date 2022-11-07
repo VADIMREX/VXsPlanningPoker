@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 
 public class Config
 {
+    #region Save-Load
     protected static Config? instance;
 
     public static Config Instance
@@ -51,6 +52,7 @@ public class Config
 
         }
     }
+    #endregion
 
     public Deck[] Decks = new Deck[0];
 

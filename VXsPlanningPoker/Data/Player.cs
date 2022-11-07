@@ -7,6 +7,8 @@ public record JSPlayer (Guid Id, string Name);
 
 public class Player
 {
+    #region Хранение всех игроков
+
     static Player() => Reload();
 
     protected static Dictionary<Guid, Player> players;
@@ -28,15 +30,7 @@ public class Player
     }
 
     public static Player Get(Guid id) => players[id];
-
-    public static implicit operator JSPlayer(Player player) => new JSPlayer(player.Id, player.Name);
-
-    public static implicit operator Player(JSPlayer player)
-    {
-        if (!players.ContainsKey(player.Id)) players.Add(player.Id, new Player() { Id = player.Id, Name = player.Name });
-        return players[player.Id];
-    }
-
+    
     public static async Task<Player> InitPlayer(IJSRuntime JS)
     {
         var value = await JS.InvokeAsync<string>("getPlayerData");
@@ -55,11 +49,20 @@ public class Player
         string value = JsonConvert.SerializeObject((JSPlayer)player);
         await JS.InvokeAsync<JSPlayer>("setPlayerData", value);
     }
-
+    
+    #endregion
 
     public Guid Id { get; set; } = Guid.NewGuid();
     
     public string Name { get; set; } = "";
 
     public override string ToString() => Name;
+
+    public static implicit operator JSPlayer(Player player) => new JSPlayer(player.Id, player.Name);
+
+    public static implicit operator Player(JSPlayer player)
+    {
+        if (!players.ContainsKey(player.Id)) players.Add(player.Id, new Player() { Id = player.Id, Name = player.Name });
+        return players[player.Id];
+    }
 }

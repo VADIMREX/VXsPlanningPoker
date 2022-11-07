@@ -2,6 +2,7 @@
 {
     public class Deck
     {
+        #region Хранение всех колод
         static Deck() => Reload();
 
         protected static Dictionary<string, Deck> decks;
@@ -22,10 +23,11 @@
         }
 
         public static Deck Get(string name) => decks[name];
+        #endregion
 
         public string Name { get; set; } = "";
 
-        public List<string> Cards { get; set; } = new List<string>();
+        public List<Card> Cards { get; set; } = new List<Card>();
 
         public override string ToString() => Name;
     }

@@ -12,7 +12,7 @@ public enum PlayState
 public class RoomPlayer
 {
     public Player Player { get; protected set; }
-    public string? pickedCard = null;
+    public Card? pickedCard = null;
 
     public RoomPlayer(Player player)
     {
@@ -23,6 +23,7 @@ public class RoomPlayer
 
 public class Room
 {
+    #region Хранение всех комнат
     static Room() => Reload();
 
     protected static Dictionary<string, Room> rooms;
@@ -60,10 +61,15 @@ public class Room
         return rooms[room.Name];
     }
 
+    #endregion
+
     public string Name { get; set; } = "";
 
     public Deck? Deck { get; set; }
 
+    public override string ToString() => Name;
+
+    #region игра
 
     public Dictionary<Guid, RoomPlayer> Players { get; set; } = new Dictionary<Guid, RoomPlayer>();
     public PlayState PlayState { get; protected set; } = PlayState.PickCard;
@@ -84,9 +90,9 @@ public class Room
         OnPlayerLeaved?.Invoke(player);
     }
 
-    public event Action<Player, string?>? OnCardPicked;
+    public event Action<Player, Card?>? OnCardPicked;
 
-    public void PickCard(Player player, string? value)
+    public void PickCard(Player player, Card? value)
     {
         Players[player.Id].pickedCard = value;
         OnCardPicked?.Invoke(player, value);
@@ -95,8 +101,12 @@ public class Room
     public event Action<string>? OnTimer;
     public void Timer()
     {
-        PlayState = PlayState.Timer;
-
+        lock (this)
+        {
+            if (PlayState.Timer == PlayState) return;
+            PlayState = PlayState.Timer;
+        }
+        
         OnTimer?.Invoke("3");
 
         Task.Delay(1000).ContinueWith(tRes =>
@@ -113,19 +123,88 @@ public class Room
         });
     }
 
+    public string GetAverage()
+    {
+        var q = this.Players
+                    .Where(x => null != x.Value.pickedCard?.Value)
+                    .ToArray();
+
+        if (0 == q.Length) return "";
+
+        var i = q.Average(x => x.Value.pickedCard.Value) ?? 0;
+        return i.ToString("F");
+    }
+
+    public string GetMediane()
+    {
+        var q = this.Players
+                    .Where(x => null != x.Value.pickedCard?.Value)
+                    .Select(x => x.Value.pickedCard.Value.Value)
+                    .OrderBy(x => x)
+                    .ToArray();
+
+        if (0 == q.Length) return GetTextMediane();
+
+        var mediane = q[q.Length / 2];
+
+        if (0 != (q.Length % 2)) return mediane.ToString("F");
+
+        mediane += q[q.Length / 2 - 1];
+
+        mediane /= 2;
+
+        return mediane.ToString("F");
+    }
+
+    public string GetTextMediane()
+    {
+        var q = this.Players
+                    .Where(x => !string.IsNullOrEmpty(x.Value.pickedCard?.Title))
+                    .Select(x => x.Value.pickedCard.Title)
+                    .OrderBy(x => x)
+                    .ToArray();
+
+        if (0 == q.Length) return "";
+
+        var mediane = q[q.Length / 2];
+
+        if (0 != (q.Length % 2)) return mediane;
+
+        var medianeLower = q[q.Length / 2 - 1];
+
+        if (mediane == medianeLower) return mediane;
+
+        return $"{medianeLower}-{mediane}";
+    }
+
+    public string Average { get; set; } = "";
+    public string Mediane { get; set; } = "";
+
     public event Action? OnShow;
     public void Show()
     {
-        PlayState = PlayState.Show;
+        lock (this)
+        {
+            if (PlayState.Show == PlayState) return;
+            PlayState = PlayState.Show;
+        }
+        Average = GetAverage();
+        Mediane = GetMediane();
         OnShow?.Invoke();
     }
 
     public event Action? OnNewRound;
     public void NewRound()
     {
+        lock (this)
+        {
+            if (PlayState.PickCard == PlayState) return;
+            PlayState = PlayState.PickCard;
+        }
         PlayState = PlayState.PickCard;
         OnNewRound?.Invoke();
     }
 
-    public override string ToString() => Name;
+    #endregion
+    
 }

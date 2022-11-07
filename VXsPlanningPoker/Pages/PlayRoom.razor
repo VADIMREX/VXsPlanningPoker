@@ -8,11 +8,13 @@
     .card-not-picked {
         padding: 1em;
     }
+
     .card {
         padding: 1em;
     }
+
     .picked {
-        padding: 1em;
+        border: 1px solid #000
     }
 </style>
 
@@ -26,48 +28,55 @@ else if (!room.Players.ContainsKey(player.Id))
 }
 else
 {
-    <button @onclick="Leave">Отключиться</button><br />
+    <button @onclick="Leave">Отключиться</button>
+    <br />
 
-    @switch(room.PlayState)
+    @switch (room.PlayState)
     {
         case PlayState.PickCard:
             <table>
-            @foreach(var p in room.Players)
-            {
-                <tr>
-                    <td> @p.Value.Player.Name</td>
-                    <td>
-                        @if (p.Key == player.Id) {
-                            @if (null == p.Value.pickedCard) {
-                                <div class="card-not-picked"></div>
+                @foreach (var p in room.Players)
+                {
+                    <tr>
+                        <td> @p.Value.Player.Name</td>
+                        <td>
+                            @if (p.Key == player.Id)
+                            {
+                                @if (null == p.Value.pickedCard)
+                                {
+                                    <div class="card-not-picked"></div>
+                                }
+                                else
+                                {
+                                    <div class="card">@p.Value.pickedCard</div>
+                                }
                             }
                             else
                             {
-                                <div class="card">@p.Value.pickedCard</div>
+                                @if (null == p.Value.pickedCard)
+                                {
+                                    <div class="card">🔶🔶<br />🔶🔶<br />🔶🔶</div>
+                                }
+                                else
+                                {
+                                    <div class="card">🔷🔷<br />🔷🔷<br />🔷🔷</div>
+                                }
                             }
-                        }
-                        else{
-                            @if (null == p.Value.pickedCard) {
-                                <div class="card">🔶🔶<br/>🔶🔶<br/>🔶🔶</div>
-                            }
-                            else
-                            {
-                                <div class="card">🔷🔷<br/>🔷🔷<br/>🔷🔷</div>
-                            }
-                        }
-                    </td>
-                </tr>
-            }
+                        </td>
+                    </tr>
+                }
             </table>
-            <table><tr>
-            @foreach(var c in room.Deck.Cards)
-            {
-                var card = c;
-                <td class="@(card == pickedCard ? "picked" : "")">
-                    <button @onclick="()=>PickCard(card)"><br/>@c<br />&nbsp;</button>
-                </td>
-            }
-            </tr></table>
+            <table>
+                <tr>
+                    @foreach (var c in room.Deck.Cards)
+                    {
+                        var card = c;
+                        <td class="@(card == pickedCard ? "picked" : "")">
+                            <button @onclick="()=>PickCard(card)"><br />@c<br />&nbsp;</button>
+                        </td>
+                    }
+                </tr>
+            </table>
             <button @onclick="ShowCards">Показать карты</button>
             break;
         case PlayState.Timer:
@@ -75,25 +84,34 @@ else
             break;
         case PlayState.Show:
             <table>
-            @foreach(var p in room.Players)
-            {
+                @foreach (var p in room.Players)
+                {
+                    <tr>
+                        <td>@p.Value.Player.Name</td>
+                        <td>
+                            @if (null == p.Value.pickedCard)
+                            {
+                                <div class="card-not-picked"></div>
+                            }
+                            else
+                            {
+                                <div class="card">@p.Value.pickedCard</div>
+                            }
+                        </td>
+                    </tr>
+                }
                 <tr>
-                    <td>@p.Value.Player.Name</td>
-                    <td>
-                        @if (null == p.Value.pickedCard)
-                        {
-                            <div class="card-not-picked"></div>
-                        }
-                        else {
-                            <div class="card">@p.Value.pickedCard</div>
-                        }
-                    </td>
+                    <td>Среднее</td>
+                    <td>Медиана</td>
                 </tr>
-            }
+                <tr>
+                    <td>@room.Average</td>
+                    <td>@room.Mediane</td>
+                </tr>
             </table>
             <button @onclick="NewRound">Новый раунд</button>
             break;
-    } 
+    }
 }
 
 @code {
@@ -105,7 +123,7 @@ else
 
     public Player player;
 
-    public string? pickedCard;
+    public Card? pickedCard;
 
     public string timerText = "";
 
@@ -123,7 +141,8 @@ else
         room.OnCardPicked += onCardPicked;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
         player = await Player.InitPlayer(JS);
         this.StateHasChanged();
     }
@@ -138,7 +157,7 @@ else
         room.Leave(player);
     }
 
-    public void PickCard(string card)
+    public void PickCard(Card? card)
     {
         if (pickedCard == card) card = null;
         room.PickCard(player, card);
@@ -148,6 +167,8 @@ else
     {
         room.Timer();
     }
+
+    
 
     public void NewRound()
     {
@@ -197,11 +218,11 @@ else
         });
     }
 
-    void onCardPicked(Player p, string c)
+    void onCardPicked(Player p, Card? c)
     {
         this.InvokeAsync(() =>
         {
-            pickedCard = c;
+            if (p.Id == player?.Id) pickedCard = c;
             this.StateHasChanged();
         });
     }
